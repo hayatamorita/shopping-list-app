@@ -5,9 +5,17 @@ import { createClient } from "@/lib/supabase/client";
 
 type Props = {
   onLoggedIn: () => void;
+  emailRedirectTo?: string;
+  title?: string;
+  description?: string;
 };
 
-export default function AuthForm({ onLoggedIn }: Props) {
+export default function AuthForm({
+  onLoggedIn,
+  emailRedirectTo,
+  title = "買いもの帳",
+  description,
+}: Props) {
   const [supabase] = useState(() => createClient());
 
   const [email, setEmail] = useState("");
@@ -29,11 +37,14 @@ export default function AuthForm({ onLoggedIn }: Props) {
     setMessage("");
     setMessageKind("");
 
+    const redirectUrl =
+      emailRedirectTo ?? window.location.href;
+
     const { data, error } = await supabase.auth.signUp({
       email: email.trim(),
       password,
       options: {
-        emailRedirectTo: window.location.origin,
+        emailRedirectTo: redirectUrl,
       },
     });
 
@@ -44,18 +55,14 @@ export default function AuthForm({ onLoggedIn }: Props) {
       return;
     }
 
-    // Confirm email がOFFの場合は、その場でSessionが作成される
     if (data.session) {
-      setMessage("アカウントを作成しました");
-      setMessageKind("success");
       setLoading(false);
       onLoggedIn();
       return;
     }
 
-    // Confirm email がONの場合
     setMessage(
-      "確認メールを送信しました。メール内のリンクを開いて、メールアドレスの確認を完了してください。確認後、この画面からログインできます。"
+      "確認メールを送信しました。メール内のリンクを開いて登録を完了してください。"
     );
     setMessageKind("success");
     setPassword("");
@@ -73,10 +80,11 @@ export default function AuthForm({ onLoggedIn }: Props) {
     setMessage("");
     setMessageKind("");
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email: email.trim(),
-      password,
-    });
+    const { error } =
+      await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      });
 
     if (error) {
       setMessage(error.message);
@@ -93,8 +101,14 @@ export default function AuthForm({ onLoggedIn }: Props) {
     <main className="flex min-h-dvh items-center px-4 py-8 sm:px-6">
       <section className="mx-auto w-full max-w-md rounded-2xl border border-line bg-surface p-5 sm:p-7">
         <h1 className="text-2xl font-semibold text-ink sm:text-3xl">
-          買いもの帳
+          {title}
         </h1>
+
+        {description && (
+          <p className="mt-2 text-sm text-muted">
+            {description}
+          </p>
+        )}
 
         <form
           className="mt-6 space-y-4"
@@ -117,7 +131,7 @@ export default function AuthForm({ onLoggedIn }: Props) {
               autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="min-h-11 w-full rounded-xl border border-line bg-paper px-4 text-base text-ink placeholder:text-muted/70 transition-colors hover:border-pine focus:border-pine focus:outline-none"
+              className="min-h-11 w-full rounded-xl border border-line bg-paper px-4 text-base text-ink focus:border-pine focus:outline-none"
             />
           </div>
 
@@ -132,10 +146,9 @@ export default function AuthForm({ onLoggedIn }: Props) {
             <input
               id="password"
               type="password"
-              autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="min-h-11 w-full rounded-xl border border-line bg-paper px-4 text-base text-ink placeholder:text-muted/70 transition-colors hover:border-pine focus:border-pine focus:outline-none"
+              className="min-h-11 w-full rounded-xl border border-line bg-paper px-4 text-base text-ink focus:border-pine focus:outline-none"
             />
           </div>
 
@@ -143,7 +156,7 @@ export default function AuthForm({ onLoggedIn }: Props) {
             <button
               type="submit"
               disabled={loading}
-              className="min-h-11 w-full rounded-xl bg-pine px-5 font-semibold text-white transition-colors hover:bg-pine-strong disabled:cursor-not-allowed disabled:opacity-50"
+              className="min-h-11 w-full rounded-xl bg-pine px-5 font-semibold text-white disabled:opacity-50"
             >
               {loading ? "確認中..." : "ログイン"}
             </button>
@@ -152,9 +165,9 @@ export default function AuthForm({ onLoggedIn }: Props) {
               type="button"
               onClick={() => void signUp()}
               disabled={loading}
-              className="min-h-11 w-full rounded-xl border border-line bg-transparent px-5 font-semibold text-ink transition-colors hover:border-pine hover:text-pine disabled:cursor-not-allowed disabled:opacity-50"
+              className="min-h-11 w-full rounded-xl border border-line px-5 font-semibold text-ink disabled:opacity-50"
             >
-              {loading ? "処理中..." : "新規登録"}
+              新規登録
             </button>
           </div>
 
@@ -165,8 +178,6 @@ export default function AuthForm({ onLoggedIn }: Props) {
                   ? "bg-error-surface text-vermillion"
                   : "bg-sage text-ink"
               }`}
-              role={messageKind === "error" ? "alert" : "status"}
-              aria-live="polite"
             >
               {message}
             </p>

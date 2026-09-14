@@ -7,6 +7,7 @@ import AuthForm from "@/components/AuthForm";
 import ShoppingForm from "@/components/ShoppingForm";
 import ShoppingList from "@/components/ShoppingList";
 import ShareListForm from "@/components/ShareListForm";
+import InviteLinkForm from "@/components/InviteLinkForm";
 
 import { createClient } from "@/lib/supabase/client";
 
@@ -475,7 +476,7 @@ export default function Home() {
                   />
 
                   {selectedList.owner_id === user.id && (
-                    <ShareListForm listId={selectedList.id} />
+                    <InviteLinkForm listId={selectedList.id} />
                   )}
                 </>
               )}
