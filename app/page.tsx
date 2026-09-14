@@ -309,6 +309,12 @@ export default function Home() {
   }
 
   async function deleteItem(id: string) {
+    const item = items.find((current) => current.id === id);
+
+    if (!item || !window.confirm(`「${item.name}」を削除しますか？`)) {
+      return;
+    }
+
     const { error } = await supabase
       .from("shopping_items")
       .delete()
@@ -337,8 +343,10 @@ export default function Home() {
 
   if (authLoading) {
     return (
-      <main className="p-8">
-        読み込み中...
+      <main className="flex min-h-dvh items-center justify-center px-4 py-8">
+        <p className="text-sm text-muted" role="status">
+          読み込み中...
+        </p>
       </main>
     );
   }
@@ -352,135 +360,129 @@ export default function Home() {
   }
 
   return (
-    <main className="mx-auto max-w-md p-8">
-
-      <div className="mb-6 flex items-center justify-between">
-
-        <div>
-          <h1 className="text-3xl font-bold">
-            買い物リスト
-          </h1>
-
-          <p className="mt-1 text-sm text-gray-500">
-            {user.email}
-          </p>
-        </div>
-
-        <button
-          onClick={logout}
-          className="rounded border px-3 py-2"
-        >
-          ログアウト
-        </button>
-
-      </div>
-
-      {error && (
-        <p className="mb-4 rounded bg-red-50 p-3 text-sm text-red-600">
-          {error}
-        </p>
-      )}
-
-      {dbLoading ? (
-        <p>読み込み中...</p>
-      ) : lists.length === 0 ? (
-
-        <div className="space-y-3">
-
-          <input
-            type="text"
-            value={newListName}
-            onChange={(e) =>
-              setNewListName(e.target.value)
-            }
-            onKeyDown={(e) => {
-
-              if (
-                e.nativeEvent.isComposing
-              ) {
-                return;
-              }
-
-              if (e.key === "Enter") {
-                e.preventDefault();
-                createShoppingList();
-              }
-
-            }}
-            placeholder="例：スーパー用"
-            className="w-full rounded border p-2"
-          />
-
-          <button
-            onClick={createShoppingList}
-            className="rounded bg-blue-500 px-4 py-2 text-white"
-          >
-            買い物リストを作成
-          </button>
-
-        </div>
-
-      ) : (
-        <>
-
-          <div className="mb-6">
-
-            <label className="mb-2 block text-sm font-bold">
-              買い物リスト
-            </label>
-
-            <select
-              value={selectedListId ?? ""}
-              onChange={(e) =>
-                selectList(e.target.value)
-              }
-              className="w-full rounded border p-2"
-            >
-              {lists.map((list) => (
-                <option
-                  key={list.id}
-                  value={list.id}
-                >
-                  {list.name}
-                  {list.owner_id === user.id
-                    ? "（自分）"
-                    : "（共有）"}
-                </option>
-              ))}
-            </select>
-
+    <main className="min-h-dvh px-4 py-6 sm:px-6 sm:py-10">
+      <div className="mx-auto w-full max-w-2xl">
+        <header className="mb-6 flex items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight text-ink sm:text-3xl">
+              買いもの帳
+            </h1>
+            <p className="mt-1 max-w-prose break-all text-xs text-muted">
+              {user.email}
+            </p>
           </div>
 
-          {selectedList && (
-            <>
-              <h2 className="mb-4 text-xl font-bold">
-                {selectedList.name}
+          <button
+            type="button"
+            onClick={logout}
+            className="min-h-11 shrink-0 rounded-full border border-line bg-surface px-4 text-sm font-medium text-ink transition-colors hover:border-pine hover:text-pine"
+          >
+            ログアウト
+          </button>
+        </header>
+
+        {error && (
+          <div
+            className="mb-5 rounded-2xl border border-vermillion/30 bg-error-surface px-4 py-3 text-sm text-vermillion"
+            role="alert"
+          >
+            {error}
+          </div>
+        )}
+
+        <section className="rounded-2xl border border-line bg-surface p-4 sm:p-6">
+          {dbLoading ? (
+            <div className="space-y-3" aria-busy="true" aria-live="polite">
+              <div className="h-4 w-24 rounded-full bg-line/70" />
+              <div className="h-12 rounded-xl bg-line/50" />
+              <p className="text-sm text-muted">リストを読み込み中...</p>
+            </div>
+          ) : lists.length === 0 ? (
+            <form
+              className="space-y-4"
+              onSubmit={(event) => {
+                event.preventDefault();
+                void createShoppingList();
+              }}
+            >
+              <h2 className="text-xl font-semibold text-ink sm:text-2xl">
+                新しいリスト
               </h2>
 
-              <ShoppingForm
-                onAdd={addItem}
-              />
-
-              <ShoppingList
-                items={items}
-                onToggle={toggleItem}
-                onDelete={deleteItem}
-              />
-
-              {selectedList.owner_id ===
-                user.id && (
-                <ShareListForm
-                  listId={
-                    selectedList.id
-                  }
+              <div className="space-y-2">
+                <label
+                  htmlFor="new-list-name"
+                  className="block text-sm font-semibold text-ink"
+                >
+                  リスト名
+                </label>
+                <input
+                  id="new-list-name"
+                  type="text"
+                  value={newListName}
+                  onChange={(e) => setNewListName(e.target.value)}
+                  placeholder="例：週末"
+                  className="min-h-11 w-full rounded-xl border border-line bg-paper px-4 text-base text-ink placeholder:text-muted/70 transition-colors hover:border-pine focus:border-pine focus:outline-none"
                 />
+              </div>
+
+              <button
+                type="submit"
+                className="min-h-11 w-full rounded-xl bg-pine px-5 font-semibold text-white transition-colors hover:bg-pine-strong disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+              >
+                作成
+              </button>
+            </form>
+          ) : (
+            <>
+              <section aria-labelledby="list-selector-title" className="mb-6">
+                <label
+                  id="list-selector-title"
+                  htmlFor="list-selector"
+                  className="mb-2 block text-sm font-semibold text-ink"
+                >
+                  リスト
+                </label>
+                <select
+                  id="list-selector"
+                  value={selectedListId ?? ""}
+                  onChange={(e) => void selectList(e.target.value)}
+                  className="min-h-11 w-full rounded-xl border border-line bg-paper px-4 text-base text-ink transition-colors hover:border-pine focus:border-pine focus:outline-none"
+                >
+                  {lists.map((list) => (
+                    <option key={list.id} value={list.id}>
+                      {list.name}
+                      {list.owner_id === user.id ? "（自分）" : "（共有）"}
+                    </option>
+                  ))}
+                </select>
+              </section>
+
+              {selectedList && (
+                <>
+                  <div className="mb-4">
+                    <h2 className="text-xl font-semibold text-ink sm:text-2xl">
+                      {selectedList.name}
+                    </h2>
+                  </div>
+
+                  <ShoppingForm onAdd={addItem} />
+
+                  <ShoppingList
+                    items={items}
+                    onToggle={toggleItem}
+                    onDelete={deleteItem}
+                  />
+
+                  {selectedList.owner_id === user.id && (
+                    <ShareListForm listId={selectedList.id} />
+                  )}
+                </>
               )}
             </>
           )}
-
-        </>
-      )}
-
+        </section>
+      </div>
     </main>
   );
 }

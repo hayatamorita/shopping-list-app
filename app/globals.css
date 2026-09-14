@@ -1,26 +1,86 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --paper: #f5f1e8;
+  --surface: #fffdf8;
+  --ink: #292722;
+  --muted: #706c63;
+  --line: #ded7ca;
+  --pine: #315a4d;
+  --pine-strong: #27493e;
+  --sage: #e6eee7;
+  --vermillion: #a94735;
+  --error-surface: #fbebe6;
+  --focus: #bd6a32;
+  --font-body: "Hiragino Sans", "Yu Gothic", "Meiryo", ui-sans-serif,
+    system-ui, sans-serif;
+  --font-display-family: "Hiragino Mincho ProN", "Yu Mincho", "YuMincho",
+    serif;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-paper: var(--paper);
+  --color-surface: var(--surface);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-pine: var(--pine);
+  --color-pine-strong: var(--pine-strong);
+  --color-sage: var(--sage);
+  --color-vermillion: var(--vermillion);
+  --color-error-surface: var(--error-surface);
+  --color-focus: var(--focus);
+  --font-sans: var(--font-body);
+  --font-display: var(--font-display-family);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  border-color: var(--line);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  line-height: 1.5;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display-family);
+  letter-spacing: -0.02em;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+button:not(:disabled),
+select,
+input[type="checkbox"] {
+  cursor: pointer;
+}
+
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+
+::selection {
+  background: var(--sage);
+  color: var(--ink);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
 }
