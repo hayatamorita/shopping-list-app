@@ -8,54 +8,85 @@ type Props = {
 };
 
 export default function AuthForm({ onLoggedIn }: Props) {
-  const supabase = createClient();
+  const [supabase] = useState(() => createClient());
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
-  const [messageKind, setMessageKind] = useState<"error" | "success" | "">("");
+  const [messageKind, setMessageKind] = useState<
+    "error" | "success" | ""
+  >("");
   const [loading, setLoading] = useState(false);
 
   async function signUp() {
+    if (!email.trim() || !password) {
+      setMessage("メールアドレスとパスワードを入力してください");
+      setMessageKind("error");
+      return;
+    }
+
     setLoading(true);
     setMessage("");
     setMessageKind("");
 
-    const { error } = await supabase.auth.signUp({
-      email,
+    const { data, error } = await supabase.auth.signUp({
+      email: email.trim(),
       password,
+      options: {
+        emailRedirectTo: window.location.origin,
+      },
     });
 
     if (error) {
       setMessage(error.message);
       setMessageKind("error");
-    } else {
-      setMessage("サインアップしました");
-      setMessageKind("success");
-      onLoggedIn();
+      setLoading(false);
+      return;
     }
 
+    // Confirm email がOFFの場合は、その場でSessionが作成される
+    if (data.session) {
+      setMessage("アカウントを作成しました");
+      setMessageKind("success");
+      setLoading(false);
+      onLoggedIn();
+      return;
+    }
+
+    // Confirm email がONの場合
+    setMessage(
+      "確認メールを送信しました。メール内のリンクを開いて、メールアドレスの確認を完了してください。確認後、この画面からログインできます。"
+    );
+    setMessageKind("success");
+    setPassword("");
     setLoading(false);
   }
 
   async function login() {
+    if (!email.trim() || !password) {
+      setMessage("メールアドレスとパスワードを入力してください");
+      setMessageKind("error");
+      return;
+    }
+
     setLoading(true);
     setMessage("");
     setMessageKind("");
 
     const { error } = await supabase.auth.signInWithPassword({
-      email,
+      email: email.trim(),
       password,
     });
 
     if (error) {
       setMessage(error.message);
       setMessageKind("error");
-    } else {
-      onLoggedIn();
+      setLoading(false);
+      return;
     }
 
     setLoading(false);
+    onLoggedIn();
   }
 
   return (
@@ -73,9 +104,13 @@ export default function AuthForm({ onLoggedIn }: Props) {
           }}
         >
           <div className="space-y-1.5">
-            <label htmlFor="email" className="block text-sm font-semibold text-ink">
+            <label
+              htmlFor="email"
+              className="block text-sm font-semibold text-ink"
+            >
               メールアドレス
             </label>
+
             <input
               id="email"
               type="email"
@@ -87,9 +122,13 @@ export default function AuthForm({ onLoggedIn }: Props) {
           </div>
 
           <div className="space-y-1.5">
-            <label htmlFor="password" className="block text-sm font-semibold text-ink">
+            <label
+              htmlFor="password"
+              className="block text-sm font-semibold text-ink"
+            >
               パスワード
             </label>
+
             <input
               id="password"
               type="password"
@@ -115,7 +154,7 @@ export default function AuthForm({ onLoggedIn }: Props) {
               disabled={loading}
               className="min-h-11 w-full rounded-xl border border-line bg-transparent px-5 font-semibold text-ink transition-colors hover:border-pine hover:text-pine disabled:cursor-not-allowed disabled:opacity-50"
             >
-              新規登録
+              {loading ? "処理中..." : "新規登録"}
             </button>
           </div>
 
